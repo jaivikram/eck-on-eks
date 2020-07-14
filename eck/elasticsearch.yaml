@@ -1,0 +1,110 @@
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: elasticsearch
+  namespace: elastic-system
+spec:
+  version: 7.8.0
+  auth:
+    fileRealm:
+      - secretName: my-file-realm-secret
+  http:
+    tls:
+      selfSignedCertificate:
+        disabled: true
+  nodeSets:
+  - name: master-nodes
+    count: 3
+    config:
+      node.master: true
+      node.data: true
+      node.ingest: false
+      xpack.ml.enabled: true
+    podTemplate:
+      spec:
+        tolerations:
+          - key: "special"
+            operator: "Exists"
+            effect: "NoSchedule"
+        initContainers:
+        - name: sysctl
+          securityContext:
+            privileged: true
+          command: ['sh', '-c', 'sysctl -w vm.max_map_count=262144']
+        - name: install-plugins
+          command:
+          - sh
+          - -c
+          - |
+            bin/elasticsearch-plugin install --batch repository-s3
+        containers:
+        - name: elasticsearch
+          env:
+          - name: ES_JAVA_OPTS
+            value: "-Xms15g -Xmx15g"
+          resources:
+            requests:
+              memory: 15Gi
+              cpu: 1
+            limits:
+              memory: 25Gi
+              cpu: 2
+        nodeSelector:
+          node: elastic
+    volumeClaimTemplates:
+    - metadata:
+        name: elasticsearch-data
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 100Gi
+
+#  - name: data-nodes
+#    count: 3
+#    config:
+#      node.master: true
+#      node.data: true
+#      node.ingest: true
+#      xpack.ml.enabled: true
+#    podTemplate:
+#      spec:
+#        initContainers:
+#          - name: sysctl
+#            securityContext:
+#              privileged: true
+#            command: ['sh', '-c', 'sysctl -w vm.max_map_count=262144']
+#          - name: install-plugins
+#            command:
+#              - sh
+#              - -c
+#              - |
+#                bin/elasticsearch-plugin install --batch repository-s3
+#        containers:
+#          - name: elasticsearch
+#            env:
+#              - name: ES_JAVA_OPTS
+#                value: "-Xms15g -Xmx15g"
+#            resources:
+#              requests:
+#                memory: 15Gi
+#                cpu: 2
+#              limits:
+#                memory: 15Gi
+#                cpu: 2
+#        nodeSelector:
+#          node: elastic
+#    volumeClaimTemplates:
+#      - metadata:
+#          name: elasticsearch-data
+#        spec:
+#          accessModes:
+#            - ReadWriteOnce
+#          resources:
+#            requests:
+#              storage: 100Gi
+#  http:
+#    tls:
+#      selfSignedCertificate:
+#        disabled: true

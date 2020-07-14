@@ -1,0 +1,91 @@
+image: "arn.dkr.ecr.us-east-2.amazonaws.com/logstash"
+imageTag: "dev"
+imagePullPolicy: "Always"
+imagePullSecrets: []
+
+envFrom:
+  - secretRef:
+      name: elasticsearch-es-elastic-user
+
+service:
+  annotations: {}
+  type: ClusterIP
+  ports:
+    - name: beats
+      port: 5044
+      protocol: TCP
+      targetPort: 5044
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+
+logstashJavaOpts: "-Xmx4g -Xms4g"
+
+replicas: 3
+
+nodeSelector:
+  node: elastic
+
+tolerations:
+    - key: "special"
+      operator: "Exists"
+      effect: "NoSchedule"
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 4096Mi
+  limits:
+    cpu: 3000m
+    memory: 4096Mi
+
+volumeClaimTemplate:
+  accessModes: [ "ReadWriteOnce" ]
+  resources:
+    requests:
+      storage: 10Gi
+
+logstashConfig:
+  logstash.yml: |
+    http.host: 0.0.0.0
+    xpack.monitoring.enabled: false
+    
+logstashPipeline:
+  uptime.conf: |
+    input {
+        kinesis {
+            application_name => "sample"
+            initial_position_in_stream => "LATEST"
+            kinesis_stream_name => "sample_kinesis_stream"
+            region => "us-east-2"
+            codec => json { }
+            type => "sample"
+        }
+    }
+
+    filter {
+
+    }
+
+    output {
+        if [type] =~ "aw21mm_preprocess" {
+            elasticsearch {
+                hosts => ["http://elasticsearch-es-http.elastic-system:9200"]
+                user => "elastic"
+                password => "${elastic}"
+                index => "%{type}_index"
+                template => "/usr/share/logstash/config/templates/sample.json"
+                manage_template => true
+                template_overwrite => true
+                template_name => "sample"
+            }
+        } else {
+            elasticsearch {
+                hosts => ["http://elasticsearch-es-http.elastic-system:9200"]
+                user => "elastic"
+                password => "${elastic}"
+                index => "%{type}_index"
+            }
+        }
+    }

@@ -1,0 +1,187 @@
+image: "ecr_url/logstash"
+imageTag: "latest"
+imagePullPolicy: "IfNotPresent"
+imagePullSecrets: []
+
+service:
+  annotations: {}
+  type: ClusterIP
+  ports:
+    - name: beats
+      port: 5044
+      protocol: TCP
+      targetPort: 5044
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+
+logstashJavaOpts: "-Xmx2g -Xms2g"
+
+replicas: 2
+
+nodeSelector:
+  node: elastic
+
+tolerations:
+    - key: "special"
+      operator: "Exists"
+      effect: "NoSchedule"
+
+resources:
+  requests:
+    cpu: 1
+    memory: "2048Mi"
+  limits:
+    cpu: 2
+    memory: "4096Mi"
+
+volumeClaimTemplate:
+  accessModes: [ "ReadWriteOnce" ]
+  resources:
+    requests:
+      storage: 10Gi
+
+logstashConfig:
+  logstash.yml: |
+    http.host: 0.0.0.0
+    xpack.monitoring.enabled: false
+    
+logstashPipeline:
+  uptime.conf: |
+    input {
+        kinesis {
+            application_name => "21mm_raw_can300_dev-awtc_es"
+            initial_position_in_stream => "LATEST"
+            kinesis_stream_name => "21mm_raw_can300_dev-awtc-use2"
+            region => "us-east-2"
+            codec => json { }
+            type => "21mm_raw_can300_dev-awtc"
+        }
+        kinesis {
+            application_name => "21mm_mapmatch_dev-awtc_es"
+            initial_position_in_stream => "LATEST"
+            kinesis_stream_name => "21mm_mapmatch_dev-awtc-use2"
+            region => "us-east-2"
+            codec => json { }
+            type => "21mm_mapmatch_dev-awtc"
+        }
+        kinesis {
+            application_name => "21mm_preprocess_dev-awtc_es"
+            initial_position_in_stream => "LATEST"
+            kinesis_stream_name => "21mm_preprocess_dev-awtc-use2"
+            region => "us-east-2"
+            codec => json { }
+            type => "21mm_preprocess_dev-awtc"
+        }
+        kinesis {
+            application_name => "21mm_sort_dev-awtc_es"
+            initial_position_in_stream => "LATEST"
+            kinesis_stream_name => "21mm_sort_dev-awtc-use2"
+            region => "us-east-2"
+            codec => json { }
+            type => "21mm_sort_dev-awtc"
+        }
+        kinesis {
+            application_name => "21mm_laneid_dev-awtc_es"
+            initial_position_in_stream => "LATEST"
+            kinesis_stream_name => "21mm_laneid_dev-awtc-use2"
+            region => "us-east-2"
+            codec => json { }
+            type => "21mm_laneid_dev-awtc"
+        }
+        kinesis {
+            application_name => "21mm_appendlink_dev-awtc_es"
+            initial_position_in_stream => "LATEST"
+            kinesis_stream_name => "21mm_appendlink_dev-awtc-use2"
+            region => "us-east-2"
+            codec => json { }
+            type => "21mm_appendlink_dev-awtc"
+        }
+        kinesis {
+            application_name => "21mm_laneid_lambda_dev-awtc_es"
+            initial_position_in_stream => "LATEST"
+            kinesis_stream_name => "21mm_laneid_lambda_dev-awtc-use2"
+            region => "us-east-2"
+            codec => json { }
+            type => "21mm_laneid_lambda_dev-awtc"
+        }
+        kinesis {
+            application_name => "21mm_log_jamtail_dev-awtc_es"
+            initial_position_in_stream => "LATEST"
+            kinesis_stream_name => "21mm_log_jamtail_dev-awtc-use2"
+            region => "us-east-2"
+            codec => json { }
+            type => "21mm_log_jamtail_dev-awtc"
+        }
+        kinesis {
+            application_name => "21mm_log_laneid_order_dev-awtc_es"
+            initial_position_in_stream => "LATEST"
+            kinesis_stream_name => "21mm_log_laneid_order_dev-awtc-use2"
+            region => "us-east-2"
+            codec => json { }
+            type => "21mm_log_laneid_order_dev-awtc"
+        }
+
+    }
+
+    filter {
+        if [type] =~ "prc_mapmatch_release1" {
+            mutate {
+                split => [ "message" , "?" ]
+                add_field => { "short" => "%{[message][3]}" }
+            }
+        }
+
+        if [type] =~ "prc_json_release1" {
+            mutate {
+                split => [ "message" , "!" ]
+                add_field => { "short" => "%{[message][1]}" }
+            }
+        }
+
+        if [type] =~ ".*release1" {
+            mutate {
+                rename => { "short" => "message" }
+            }
+
+            json {
+                source => "message"
+            }
+
+            mutate {
+                remove_field => "message"
+            }
+        }
+        
+        if [type] =~ "prc_laneid_dev" or [type] =~ "prc_appendlink_dev" {
+            mutate {
+            convert => {
+                "time" => "integer"
+            }
+            }
+        }
+
+        if [type] =~ "kafka.*" {
+            mutate {
+            add_field => { "kafka_offset" => "%{[@metadata][kafka][offset]}" }
+            add_field => { "kafka_timestamp" => "%{[@metadata][kafka][timestamp]}" }
+            add_field => { "kafka_partition" => "%{[@metadata][kafka][partition]}" }
+            add_field => { "kafka_key" => "%{[@metadata][kafka][key]}" }
+            }
+        }
+
+        if [type] =~ "21mm.*" {
+            date { match => [ "[@metadata][approximate_arrival_timestamp]", "UNIX_MS" ] }
+        }
+
+    }
+
+    output {
+      elasticsearch {
+          hosts => ["http://elasticsearch-es-http.elastic-system:9200"]
+          user => "elastic"
+          password => "bjg8fqvcj6zcsz5mwvcmgqcv"
+          index => "%{type}-index"
+          }
+    }

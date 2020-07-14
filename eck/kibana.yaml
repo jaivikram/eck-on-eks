@@ -1,0 +1,41 @@
+apiVersion: kibana.k8s.elastic.co/v1
+kind: Kibana
+metadata:
+  name: kibana
+  namespace: elastic-system
+spec:
+  podTemplate:
+    spec:
+      tolerations:
+        - key: "special"
+          operator: "Exists"
+          effect: "NoSchedule"
+      containers:
+        - name: kibana
+          resources:
+            requests:
+              memory: 1Gi
+              cpu: 500m
+            limits:
+              memory: 2Gi
+              cpu: 1
+      nodeSelector:
+        node: elastic
+  version: 7.8.0
+  count: 1
+  elasticsearchRef:
+    name: "elasticsearch"
+  config:
+    elasticsearch.username: "user"
+    elasticsearch.password: "password"
+    xpack.security.encryptionKey: "sampleEncryptionKeyToTestKibanaDefaultUsername"
+  http:
+    service:
+      spec:
+        type: ClusterIP
+        selector:
+          kibana.k8s.elastic.co/name: kibana
+        sessionAffinity: ClientIP
+    tls:
+      selfSignedCertificate:
+        disabled: true

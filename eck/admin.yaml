@@ -1,0 +1,13 @@
+apiVersion: v1
+data:
+  users: YXd0Y3VzOiQyYSQxMCRDQTIubFFqLlRUL1ZWUVZ1Q3dMdENPSmh0bmJNNk42YVZVenN2eXZjMnVvWVZnZGdFZUJ1Swo=
+  users_roles: c3VwZXJ1c2VyOmF3dGN1cwo=
+kind: Secret
+metadata:
+  creationTimestamp: "2020-06-25T14:54:41Z"
+  name: my-file-realm-secret
+  namespace: elastic-system
+  resourceVersion: "14736"
+  selfLink: /api/v1/namespaces/elastic-system/secrets/my-file-realm-secret
+  uid: 4108c2cb-3eaa-4efe-ada2-ede4ae644beb
+type: Opaque

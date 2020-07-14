@@ -1,0 +1,26 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+#    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+  name: es-ingress
+  namespace: elastic-system
+spec:
+  tls:
+    - hosts:
+        - kibana.domain.com
+      secretName: es-ingress
+  rules:
+    - host: kibana.domain.com
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: kibana-kb-http
+              servicePort: 5601
+#  backend:
+#    serviceName: kibana-kb-http
+#    servicePort: 5601

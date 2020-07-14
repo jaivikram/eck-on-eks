@@ -1,0 +1,28 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: kibana-ext-lb
+  namespace: elastic-system
+  labels:
+    app.kubernetes.io/name: kibana
+    app.kubernetes.io/part-of: kibana
+  annotations:
+    # by default the type is external network-facing
+    #service.beta.kubernetes.io/aws-load-balancer-internal: 'true'
+    # by default the type is elb (classic load balancer).
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+spec:
+  # this setting is to make sure the source IP address is preserved.
+  #externalTrafficPolicy: Local
+  externalTrafficPolicy: Cluster
+  type: LoadBalancer
+  selector:
+    kibana.k8s.elastic.co/name: kibana
+    #app.kubernetes.io/name: neo4j
+    #app.kubernetes.io/part-of: neo4j
+  ports:
+    - name: http
+      port: 80
+      targetPort: 5601
+
+

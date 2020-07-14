@@ -1,0 +1,107 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+iam:
+  withOIDC: true
+  serviceAccounts:
+    - metadata:
+        name: cluster-autoscaler
+        namespace: kube-system
+        labels: {aws-usage: "cluster-ops"}
+      attachPolicy: # inline policy can be defined along with `attachPolicyARNs`
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - "autoscaling:DescribeAutoScalingGroups"
+              - "autoscaling:DescribeAutoScalingInstances"
+              - "autoscaling:DescribeLaunchConfigurations"
+              - "autoscaling:DescribeTags"
+              - "autoscaling:SetDesiredCapacity"
+              - "autoscaling:TerminateInstanceInAutoScalingGroup"
+            Resource: '*'
+
+
+metadata:
+  name: eck-dev
+  region: us-east-2
+  version: "1.16"
+
+nodeGroups:
+  - name: spot-fleet
+    instancesDistribution:
+      instanceTypes: ["m5.xlarge", "c5.xlarge", "r5.xlarge", "m5a.xlarge", "c5a.xlarge", "r5a.xlarge", "r6g.xlarge"]
+      onDemandPercentageAboveBaseCapacity: 0
+      spotInstancePools: 1
+    minSize: 1
+    maxSize: 1
+    desiredCapacity: 1
+    ssh: # use existing EC2 key
+      publicKeyName: eck_dev
+      allow: true
+    labels: { node: base }
+    iam:
+      attachPolicyARNs:
+        - arn:aws:iam::aws:policy/AmazonRoute53FullAccess
+        - arn:aws:iam::aws:policy/AmazonKinesisFullAccess
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+        - arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
+        - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess      
+      withAddonPolicies:
+        autoScaler: true
+        ebs: true
+    tags:
+      # EC2 tags required for cluster-autoscaler auto-discovery
+      k8s.io/cluster-autoscaler/enabled: "true"
+      k8s.io/cluster-autoscaler/21MM-dev: "owned"
+      Schedule: AlwaysOn
+
+
+  # - name: neo4j
+  #   instancesDistribution:
+  #     instanceTypes: ["r5.xlarge", "r5a.xlarge"]
+  #     onDemandPercentageAboveBaseCapacity: 0
+  #   minSize: 3
+  #   maxSize: 3
+  #   volumeSize: 64
+  #   ssh: # use existing EC2 key
+  #     publicKeyName: eck_dev
+  #     allow: true
+  #   labels: { node: neo4j }
+  #   iam:
+  #     attachPolicyARNs:
+  #       - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+  #       - arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
+  #       - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+  #       - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+  #     withAddonPolicies:
+  #       ebs: true
+  #   taints:
+  #     special: "true:NoSchedule"
+
+  - name: elastic
+    instancesDistribution:
+      instanceTypes: ["r5.xlarge", "r5a.xlarge", "r6g.xlarge"]
+      onDemandPercentageAboveBaseCapacity: 0
+    minSize: 3
+    maxSize: 3
+    ssh: # use existing EC2 key
+      publicKeyName: eck_dev
+      allow: true
+    labels: { node: elastic }
+    iam:
+      attachPolicyARNs:
+        - arn:aws:iam::aws:policy/AmazonKinesisReadOnlyAccess
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+        - arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
+        - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess        
+      withAddonPolicies:
+        ebs: true
+    tags:
+      Schedule: AlwaysOn
+    taints:
+      special: "true:NoSchedule"
