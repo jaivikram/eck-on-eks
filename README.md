@@ -16,7 +16,7 @@ This can be used to set up a kubernetes cluster with enough resources provisione
 * awscli
   
 ##### config kubectl context to EKS created cluster 
-[reference link](https://docs.aws.amazon.com/eks/latest/userguide/create-kubeconfig.html)
+[[reference link]](https://docs.aws.amazon.com/eks/latest/userguide/create-kubeconfig.html)
 
 ```bash
 # aws eks --region region-code update-kubeconfig --name cluster_name
@@ -202,7 +202,7 @@ kubectl logs bformat-neo4j-core-0 -n neo4j -c init-plugins
 kubectl logs bformat-neo4j-core-0 -n neo4j -c neo4jinit
 ```
 
-[reference](https://kubernetes.io/docs/tasks/debug-application-cluster/debug-init-containers/)
+[[reference]](https://kubernetes.io/docs/tasks/debug-application-cluster/debug-init-containers/)
 
 ### Deployment
 
@@ -214,7 +214,7 @@ kubectl logs bformat-neo4j-core-0 -n neo4j -c neo4jinit
 
 ## Delete cluster
 
-[reference](https://docs.aws.amazon.com/eks/latest/userguide/delete-cluster.html)
+[[reference]](https://docs.aws.amazon.com/eks/latest/userguide/delete-cluster.html)
 
 ```bash
 # delete any services that have an associated EXTERNAL-IP value
