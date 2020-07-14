@@ -3,7 +3,8 @@ Table of Contents
 
    * [Overview](#overview)
    * [Prerequisites](#prerequisites)
-               * [config kubectl context to EKS created cluster](#config-kubectl-context-to-eks-created-cluster)
+      * [config kubectl context to EKS created cluster](#config-kubectl-context-to-eks-created-cluster)
+               
    * [Procedure](#procedure)
       * [Create EKSCTL Cluster](#create-eksctl-cluster)
       * [Cluster Autoscaler Configuration](#cluster-autoscaler-configuration)
