@@ -1,38 +1,3 @@
-Table of Contents
-=================
-
-   * [Overview](#overview)
-   * [Prerequisites](#prerequisites)
-      * [config kubectl context to EKS created cluster](#config-kubectl-context-to-eks-created-cluster)
-               
-   * [Procedure](#procedure)
-      * [Create EKSCTL Cluster](#create-eksctl-cluster)
-      * [Cluster Autoscaler Configuration](#cluster-autoscaler-configuration)
-      * [Quick Bootstrap](#quick-bootstrap)
-      * [Kubernetes Dashboard](#kubernetes-dashboard)
-   * [Pre-deployment Configuration](#pre-deployment-configuration)
-      * [Elastic Cloud](#elastic-cloud)
-         * [Logstash Configuration](#logstash-configuration)
-         * [Route53 Endpoint](#route53-endpoint)
-         * [Load Balancer Endpoint](#load-balancer-endpoint)
-         * [Accessing the Kibana Dashboard](#accessing-the-kibana-dashboard)
-            * [K8s dashboard](#k8s-dashboard)
-            * [AWS Dashboard](#aws-dashboard)
-         * [Resource Management](#resource-management)
-      * [Granting other IAM users rights to access EKS](#granting-other-iam-users-rights-to-access-eks)
-         * [EKSCTL](#eksctl)
-         * [General EKS](#general-eks)
-         * [sample yaml](#sample-yaml)
-      * [Neo4J](#neo4j)
-         * [Initcontainer Configuration](#initcontainer-configuration)
-         * [Neo4J Configuration](#neo4j-configuration)
-         * [Neo4J Helpful Commands](#neo4j-helpful-commands)
-         * [Deployment](#deployment)
-   * [Cleanup](#cleanup)
-      * [Delete cluster](#delete-cluster)
-      * [delete kubectl context](#delete-kubectl-context)
-   * [References](#references)
-
 # Overview
 
 This repo is to setup elastic cloud on kubernetes (ECK) on elastic kubernetes service on AWS(EKS), using nginx-ingress and cert-manager for https access to Kibana.
