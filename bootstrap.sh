@@ -5,6 +5,8 @@ kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/down
 kubectl get deployment metrics-server -n kube-system
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.6.1/aio/deploy/recommended.yaml
 # Creates admin user for eks
+kubectl create -f https://download.elastic.co/downloads/eck/2.4.0/crds.yaml
+kubectl apply -f https://download.elastic.co/downloads/eck/2.4.0/operator.yaml
 kubectl apply -f eksadmin.yaml
 
 # Start autoscaler (determines whether to add nodes or not based on load)
@@ -16,7 +18,7 @@ kubectl create ns cert-manager
 # kubectl create ns grafana
 
 #Add helm charts
-helm repo add stable https://kubernetes-charts.storage.googleapis.com
+helm repo add stable https://charts.helm.sh/stable
 helm repo add elastic https://helm.elastic.co
 helm repo add jetstack https://charts.jetstack.io
 helm repo update
