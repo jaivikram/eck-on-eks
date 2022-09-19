@@ -1,4 +1,4 @@
-apiVersion: extensions/v1beta1
+apiVersion: extensions/v1
 kind: Ingress
 metadata:
   annotations:
@@ -11,10 +11,10 @@ metadata:
 spec:
   tls:
     - hosts:
-        - kibana.domain.com
+        - es.tenkew-stage.com
       secretName: es-ingress
   rules:
-    - host: kibana.domain.com
+    - host: es.tenkew-stage.com
       http:
         paths:
           - path: /

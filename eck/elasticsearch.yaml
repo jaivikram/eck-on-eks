@@ -4,7 +4,7 @@ metadata:
   name: elasticsearch
   namespace: elastic-system
 spec:
-  version: 7.8.0
+  version: 8.4.0
   auth:
     fileRealm:
       - secretName: my-file-realm-secret
@@ -16,10 +16,14 @@ spec:
   - name: master-nodes
     count: 3
     config:
-      node.master: true
-      node.data: true
-      node.ingest: false
-      xpack.ml.enabled: true
+      node.roles: ["data", "ingest", "master"]    
+      #node.master: true
+      #node.data: true
+      #node.ingest: false
+      #xpack.ml.enabled: true
+      #xpack.security.http.ssl.enabled: false
+      #xpack.security.transport.ssl.enabled: false
+      #xpack.security.enabled: false
     podTemplate:
       spec:
         tolerations:
@@ -40,6 +44,8 @@ spec:
         containers:
         - name: elasticsearch
           env:
+          - name: READINESS_PROBE_TIMEOUT
+            value: "30"	  
           - name: ES_JAVA_OPTS
             value: "-Xms15g -Xmx15g"
           resources:
@@ -47,8 +53,30 @@ spec:
               memory: 15Gi
               cpu: 1
             limits:
-              memory: 25Gi
+              memory: 20Gi
               cpu: 2
+          ports:
+          - containerPort: 9200
+            name: rest
+            protocol: TCP
+          - containerPort: 9300
+            name: inter-node
+            protocol: TCP	      
+          #livenessProbe:
+          #  initialDelaySeconds: 300
+          #  timeoutSeconds: 300
+            #periodSeconds: 300
+          readinessProbe:
+            exec:
+              command:
+              - bash
+              - -c
+              - /mnt/elastic-internal/scripts/readiness-probe-script.sh	  
+            failureThreshold: 3
+            successThreshold: 1
+            initialDelaySeconds: 30
+            timeoutSeconds: 30
+            periodSeconds: 30
         nodeSelector:
           node: elastic
     volumeClaimTemplates:
@@ -61,50 +89,50 @@ spec:
           requests:
             storage: 100Gi
 
-#  - name: data-nodes
-#    count: 3
-#    config:
-#      node.master: true
-#      node.data: true
-#      node.ingest: true
-#      xpack.ml.enabled: true
-#    podTemplate:
-#      spec:
-#        initContainers:
-#          - name: sysctl
-#            securityContext:
-#              privileged: true
-#            command: ['sh', '-c', 'sysctl -w vm.max_map_count=262144']
-#          - name: install-plugins
-#            command:
-#              - sh
-#              - -c
-#              - |
-#                bin/elasticsearch-plugin install --batch repository-s3
-#        containers:
-#          - name: elasticsearch
-#            env:
-#              - name: ES_JAVA_OPTS
-#                value: "-Xms15g -Xmx15g"
-#            resources:
-#              requests:
-#                memory: 15Gi
-#                cpu: 2
-#              limits:
-#                memory: 15Gi
-#                cpu: 2
-#        nodeSelector:
-#          node: elastic
-#    volumeClaimTemplates:
-#      - metadata:
-#          name: elasticsearch-data
-#        spec:
-#          accessModes:
-#            - ReadWriteOnce
-#          resources:
-#            requests:
-#              storage: 100Gi
-#  http:
-#    tls:
-#      selfSignedCertificate:
-#        disabled: true
+  # - name: data-nodes
+  #   count: 1
+  #   config:
+  #     node.master: true
+  #     node.data: true
+  #     node.ingest: true
+  #     xpack.ml.enabled: true
+  #   podTemplate:
+  #     spec:
+  #       initContainers:
+  #         - name: sysctl
+  #           securityContext:
+  #             privileged: true
+  #           command: ['sh', '-c', 'sysctl -w vm.max_map_count=262144']
+  #         - name: install-plugins
+  #           command:
+  #             - sh
+  #             - -c
+  #             - |
+  #               bin/elasticsearch-plugin install --batch repository-s3
+  #       containers:
+  #         - name: elasticsearch
+  #           env:
+  #             - name: ES_JAVA_OPTS
+  #               value: "-Xms15g -Xmx15g"
+  #           resources:
+  #             requests:
+  #               memory: 15Gi
+  #               cpu: 2
+  #             limits:
+  #               memory: 15Gi
+  #               cpu: 2
+  #       nodeSelector:
+  #         node: elastic
+  #   volumeClaimTemplates:
+  #     - metadata:
+  #         name: elasticsearch-data
+  #       spec:
+  #         accessModes:
+  #           - ReadWriteOnce
+  #         resources:
+  #           requests:
+  #             storage: 100Gi
+  # http:
+  #   tls:
+  #     selfSignedCertificate:
+  #       disabled: true

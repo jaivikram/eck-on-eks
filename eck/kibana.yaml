@@ -19,9 +19,12 @@ spec:
             limits:
               memory: 2Gi
               cpu: 1
+          livenessProbe:
+            initialDelaySeconds: 30
+            timeoutSeconds: 30
       nodeSelector:
         node: elastic
-  version: 7.8.0
+  version: 8.4.0
   count: 1
   elasticsearchRef:
     name: "elasticsearch"
@@ -39,3 +42,38 @@ spec:
     tls:
       selfSignedCertificate:
         disabled: true
+  ports:
+  - port: 5601
+  selector:
+    app: kibana
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kibana
+  namespace: kube-logging
+  labels:
+    app: kibana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kibana
+  template:
+    metadata:
+      labels:
+        app: kibana
+    spec:
+      containers:
+      - name: kibana
+        image: docker.elastic.co/kibana/kibana:7.2.0
+        resources:
+          limits:
+            cpu: 1000m
+          requests:
+            cpu: 100m
+        env:
+          - name: ELASTICSEARCH_URL
+            value: http://elasticsearch:9200
+        ports:
+        - containerPort: 5601

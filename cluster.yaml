@@ -30,7 +30,7 @@ metadata:
 nodeGroups:
   - name: spot-fleet
     instancesDistribution:
-      instanceTypes: ["c5.xlarge"]
+      instanceTypes: ["r6g.large"]
       # instanceTypes: ["m5.xlarge", "c5.xlarge", "r5.xlarge", "m5a.xlarge", "c5a.xlarge", "r5a.xlarge", "r6g.xlarge"]      
       onDemandPercentageAboveBaseCapacity: 0
       spotInstancePools: 1
